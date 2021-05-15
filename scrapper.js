@@ -6,7 +6,7 @@ const championPage = (championName, championRole) => {
     if (championName == null) return
     let url = ''
     switch(championRole) {
-        case 'bot' || 'bottom' || 'bas' :
+        case 'bot' || 'bottom' || 'bas' || 'adc' :
             url = `https://euw.op.gg/champion/${championName}/statistics/bot`
             break
         case 'supp' || 'support' :
