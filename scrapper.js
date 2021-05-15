@@ -1,63 +1,64 @@
-const puppeteer = require('puppeteer')
+const axios = require('axios')
+const jsdom = require('jsdom')
+const { JSDOM } = jsdom
 
-const goToChampionPage = async (page, championName, championRole) => {
+const championPage = (championName, championRole) => {
     if (championName == null) return
-
+    let url = ''
     switch(championRole) {
         case 'bot' || 'bottom' || 'bas' :
-            await page.goto(`https://euw.op.gg/champion/${championName}/statistics/bot`)
+            url = `https://euw.op.gg/champion/${championName}/statistics/bot`
             break
         case 'supp' || 'support' :
-            await page.goto(`https://euw.op.gg/champion/${championName}/statistics/support`)
+            url = `https://euw.op.gg/champion/${championName}/statistics/support`
             break
         case 'mid' || 'middle' || 'midlane' :
-            await page.goto(`https://euw.op.gg/champion/${championName}/statistics/mid`)
+            url = `https://euw.op.gg/champion/${championName}/statistics/mid`
             break
         case 'jungle' || 'jung' :
-            await page.goto(`https://euw.op.gg/champion/${championName}/statistics/jungle`)
+            url = `https://euw.op.gg/champion/${championName}/statistics/jungle`
             break
         case 'top' || 'toplane' : 
-            await page.goto(`https://euw.op.gg/champion/${championName}/statistics/top`)
+            url = `https://euw.op.gg/champion/${championName}/statistics/top`
             break
         default :
-            await page.goto(`https://euw.op.gg/champion/${championName}/statistics/`) 
+            url =  `https://euw.op.gg/champion/${championName}/statistics/`
     }
+
+    return url
 }
 
-const acceptCookies = async (page) => {
-    // find then click on accept cookies button
-    const cookieButtonSelector = '[aria-label="J\'ACCEPTE"]'
-    await page.waitForSelector(cookieButtonSelector)
-    await page.click(cookieButtonSelector)
-}
-
-const screenshot = async (page, selector, path) => {
-    await page.waitForSelector(selector)
-    const element = await page.$(selector)
-    await element.screenshot({path: path})
+const getImages = (dom, selector) => {
+    const nodeList = dom.window.document.querySelectorAll(selector)
+    let array = []
+    Array.prototype.slice.call(nodeList).forEach(img => {
+        array.push(`https:${img.src.split('.png')[0]}.png`)
+    })
+    return array
 }
 
 const scrape = async (name, role) => {
-    const browser = await puppeteer.launch({
-        headless:false
-    })
-    const page = await browser.newPage()
-
     const championName = name.toLowerCase()
     const championRole = role.toLowerCase()
 
-    const skillsSelector = 'body > div.l-wrap.l-wrap--champion > div.l-container > div > div.tabWrap._recognized > div.l-champion-statistics-content.tabItems > div.tabItem.Content.championLayout-overview > div > div.l-champion-statistics-content__main > table.champion-overview__table.champion-overview__table--summonerspell > tbody:nth-child(5)'
-    const stuffSelector = '[class="champion-overview__table"]'
-    const runesSelector = 'body > div.l-wrap.l-wrap--champion > div.l-container > div > div.tabWrap._recognized > div.l-champion-statistics-content.tabItems > div.tabItem.Content.championLayout-overview > div > div.l-champion-statistics-content__main > div > table'
+    const html = await axios.get(championPage(championName, championRole))
+    const dom = new JSDOM(html.data)
 
-    goToChampionPage(page, championName, championRole)
-    acceptCookies(page).then( async () => {
-        screenshot(page, skillsSelector, 'screenshots/skills.png')
-        await page.waitForTimeout(200)
-        screenshot(page, stuffSelector, 'screenshots/stuff.png')
-        await page.waitForTimeout(200)
-        screenshot(page, runesSelector, 'screenshots/runes.png')
-    }) 
+    let data = {
+        runes:{
+            masteries:[],
+            fragments:[]
+        }
+    }
+
+    // img[src*="//opgg-static.akamaized.net/images/lol/item/"]
+    let masteriesSelector = '.perk-page__item--active > div > img'
+    let fragmentsSelector = '.fragment > div > img.active'
+    data.runes.masteries = getImages(dom, masteriesSelector).slice(0,6)
+    data.runes.fragments = getImages(dom, fragmentsSelector).slice(0,3)
+
+    return data
 
 }
+
 module.exports = scrape
