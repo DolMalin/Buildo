@@ -18,7 +18,7 @@ npm install
 npm run start
 ```
 
-**How to use it in discord**
+**How to use it**
 ```js
     >runes [CHAMPION-NAME] [CHAMPION-ROLE]
 ```
