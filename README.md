@@ -17,3 +17,6 @@ const config = {
 npm install
 npm run start
 ```
+
+** GG WP **
+![alt text](https://i.ibb.co/c6rFRRd/Capture-d-e-cran-2021-05-15-a-19-35-09.png)
