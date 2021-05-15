@@ -23,11 +23,11 @@ const downloadImage = (url, image_path) =>
 
 const createImages = async (res) => {
   for (let i = 0; i < res.runes.masteries.length; i++) {
-    await downloadImage(res.runes.masteries[i], `./src/img/runes/masteries/masteries${i}.png`)
+    await downloadImage(res.runes.masteries[i], `${__dirname}/src/img/runes/masteries/masteries${i}.png`)
   }
 
   for (let i = 0; i < res.runes.fragments.length; i++) {
-      await downloadImage(res.runes.fragments[i], `./src/img/runes/fragments/fragments${i}.png`)
+      await downloadImage(res.runes.fragments[i], `${__dirname}/src/img/runes/fragments/fragments${i}.png`)
   } 
 }
 
