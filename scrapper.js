@@ -40,15 +40,17 @@ const getImages = (dom, selector) => {
 const scrape = async (name, role) => {
     const championName = name.toLowerCase()
     const championRole = role.toLowerCase()
+    const url = championPage(championName, championRole)
 
-    const html = await axios.get(championPage(championName, championRole))
+    const html = await axios.get(url)
     const dom = new JSDOM(html.data)
 
     let data = {
         runes:{
             masteries:[],
-            fragments:[]
-        }
+            fragments:[],
+        },
+        url:url
     }
 
     // img[src*="//opgg-static.akamaized.net/images/lol/item/"]
@@ -57,6 +59,7 @@ const scrape = async (name, role) => {
     data.runes.masteries = getImages(dom, masteriesSelector).slice(0,6)
     data.runes.fragments = getImages(dom, fragmentsSelector).slice(0,3)
 
+    // console.log(data)
     return data
 
 }
