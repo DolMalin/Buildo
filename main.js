@@ -3,9 +3,26 @@ const fs = require('fs')
 const config = require('./config')
 const scrape = require('./scrapper')
 const Canvas = require('canvas')
-
+const championsArray = require('lol-champions')
 const Discord = require('discord.js')
 const client = new Discord.Client()
+
+const createEmbed = (imagePath, imageName, name, role, url) => {
+  const attachment = new Discord.MessageAttachment(imagePath, `${imageName}.png`);
+  const embed = new Discord.MessageEmbed()
+          .setTitle(`🔰 **${name}** | **${role}**`)
+          .setDescription("Clique sur le lien pour plus d'informations!")
+          .setURL(url)
+          .attachFiles(attachment)
+          .setImage('attachment://runes.png')
+          .setColor('#0099ff')
+  return embed
+}
+
+const isChampionExist = (name) => {
+  if (championsArray.find(e => {return e.id === name.toLowerCase()})) return true
+  else return false
+}
 
 const downloadImage = (url, image_path) =>
   axios({
@@ -29,6 +46,8 @@ const createImages = async (res) => {
   for (let i = 0; i < res.runes.fragments.length; i++) {
       await downloadImage(res.runes.fragments[i], `${__dirname}/src/img/runes/fragments/fragments${i}.png`)
   } 
+
+  return res.url
 }
 
 client.on('ready', () =>  console.log('Logged in !'))
@@ -40,41 +59,39 @@ client.on('message', async message => {
     const command = args.shift().toLowerCase()
 
     if(command === 'runes') {
-        if (args.length < 1) return message.channel.send('>>> 🔰 commande **incomplète**')
         if (args.length < 2) return message.channel.send('>>> 🔰 commande **incomplète**')
+        if (!isChampionExist(args[0], championsArray)) return message.channel.send(`>>> 🔰 Le champion **${args[0]}** n'existe pas ou est mal orthographié`)
 
         scrape(args[0], args[1]).then(async res => {
+            createImages(res).then( async (res) => {
 
-            createImages(res).then( async () => {
               const canvas = Canvas.createCanvas(440,150)
               const context = canvas.getContext('2d')
               const background = await Canvas.loadImage('./src/img/background.png')
               context.drawImage(background, 0, 0, canvas.width, canvas.height)
+              
+              let position = 20
+                for (let i = 0; i < 6; i++) {
+                let mastery = await Canvas.loadImage(`./src/img/runes/masteries/masteries${i}.png`)
+                context.drawImage(mastery, position,20,40,40)
+                position += 70
+              }
 
-              const masteries0 = await Canvas.loadImage('./src/img/runes/masteries/masteries0.png')
-              const masteries1 = await Canvas.loadImage('./src/img/runes/masteries/masteries1.png')
-              const masteries2 = await Canvas.loadImage('./src/img/runes/masteries/masteries2.png')
-              const masteries3 = await Canvas.loadImage('./src/img/runes/masteries/masteries3.png')
-              const masteries4 = await Canvas.loadImage('./src/img/runes/masteries/masteries4.png')
-              const masteries5 = await Canvas.loadImage('./src/img/runes/masteries/masteries5.png')
+              position = 120
+              for (let i = 0; i < 3; i++) {
+                let fragment = await Canvas.loadImage(`./src/img/runes/fragments/fragments${i}.png`)
+                context.drawImage(fragment, position ,100, 30,30)
+                position += 75
+              }
 
-              const fragments0 = await Canvas.loadImage('./src/img/runes/fragments/fragments0.png')
-              const fragments1 = await Canvas.loadImage('./src/img/runes/fragments/fragments1.png')
-              const fragments2 = await Canvas.loadImage('./src/img/runes/fragments/fragments2.png')
-              context.drawImage(masteries0, 20,20, 40,40)
-              context.drawImage(masteries1, 90,20, 40,40)
-              context.drawImage(masteries2, 160,20, 40,40)
-              context.drawImage(masteries3, 230,20, 40,40)
-              context.drawImage(masteries4, 300,20, 40,40)
-              context.drawImage(masteries5, 370,20, 40,40)
-              context.drawImage(fragments0, 120,100, 30,30)
-              context.drawImage(fragments1, 195,100, 30,30)
-              context.drawImage(fragments2, 270,100, 30,30)
-              const attachment = new Discord.MessageAttachment(canvas.toBuffer(), 'attachment.png')
+              let buffer = canvas.toBuffer()
+              fs.writeFileSync(`${__dirname}/src/img/canvas/runes.png`, buffer)
 
               const name = args[0].charAt(0).toUpperCase() + args[0].slice(1)
               const role = args[1].toUpperCase()
-              message.channel.send(`>>> 🔰 **${name}** | **${role}**`, attachment)
+              let embed = createEmbed('./src/img/canvas/runes.png', 'runes', name, role, res)
+
+              message.channel.send(embed)
             })
         })  
     }
