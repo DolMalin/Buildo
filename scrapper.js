@@ -15,7 +15,7 @@ const championPage = (championName, championRole) => {
         case 'mid' || 'middle' || 'midlane' :
             url = `https://euw.op.gg/champion/${championName}/statistics/mid`
             break
-        case 'jungle' || 'jung' :
+        case 'jungle' || 'jung' || 'jgl' :
             url = `https://euw.op.gg/champion/${championName}/statistics/jungle`
             break
         case 'top' || 'toplane' : 
