@@ -23,6 +23,7 @@
     "discord.js": "^12.5.3",
     "fs": "^0.0.1-security",
     "jsdom": "^16.5.3",
+    "lol-champions": "^10.23.1",
     "nodemon": "^2.0.7"
   }
 }
